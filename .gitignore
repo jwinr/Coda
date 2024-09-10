@@ -1,0 +1,9 @@
+echo "DerivedData/
+*.xcuserdata/
+*.DS_Store
+*.log
+*.xcworkspace/
+*.swiftpm/
+.build/
+Packages/
+.swift-version" >> .gitignore
