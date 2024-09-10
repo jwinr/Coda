@@ -23,8 +23,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var reduceLoudSoundsToggle: NSMenuItem!
     var decibelSliderItem: NSMenuItem!
 
-    @State private var selectedDecibelsIndex = 0
-    private let decibelValues = [75, 80, 85, 90, 95, 100] // Decibel values for each slider step
+    private let decibelValues = [75, 80, 85, 90, 95, 100]
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         self.statusBarItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -36,12 +35,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         let statusBarMenu = NSMenu(title: "Volume Limiter Menu")
         
-        // Add Reduce Loud Sounds toggle button
+        // Reduce Loud Sounds toggle button
         let toggleView = Toggle(isOn: Binding(get: {
-            // Get the current state
             return UserDefaults.standard.bool(forKey: "ReduceLoudSounds")
         }, set: { newValue in
-            // Save the new state
             UserDefaults.standard.set(newValue, forKey: "ReduceLoudSounds")
         })) {
             Text("Reduce Loud Sounds")
@@ -50,7 +47,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         .toggleStyle(SwitchToggleStyle(tint: Color(NSColor.controlAccentColor)))
 
-        // Create NSHostingView to embed SwiftUI view in NSMenuItem
         let toggleHostingView = NSHostingView(rootView: toggleView)
         toggleHostingView.frame = NSRect(x: 0, y: 0, width: 200, height: 40)
 
@@ -61,21 +57,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusBarMenu.addItem(NSMenuItem.separator())
         
         // Decibel slider and title
-        let sliderView = Slider(value: Binding(get: {
-            return Double(self.selectedDecibelsIndex)
-        }, set: { newValue in
-            self.selectedDecibelsIndex = Int(newValue)
-        }), in: 0...5, step: 1)
-            .padding(.horizontal, 20)
-        
-        let decibelText = Text("\(decibelValues[self.selectedDecibelsIndex]) decibels")
-            .fontWeight(.semibold)
-            .padding(.top, 5)
-        
-        let sliderHostingView = NSHostingView(rootView: VStack {
-            sliderView
-            decibelText
-        })
+        let sliderView = SliderView()
+        let sliderHostingView = NSHostingView(rootView: sliderView)
         sliderHostingView.frame = NSRect(x: 0, y: 0, width: 200, height: 60)
         
         decibelSliderItem = NSMenuItem()
@@ -98,3 +81,27 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
+struct SliderView: View {
+    @State private var selectedDecibelsIndex = UserDefaults.standard.integer(forKey: "SelectedDecibelIndex")
+    private let decibelValues = [75, 80, 85, 90, 95, 100]
+
+    var body: some View {
+        VStack {
+            Slider(value: Binding(get: {
+                return Double(selectedDecibelsIndex)
+            }, set: { newValue in
+                selectedDecibelsIndex = Int(newValue)
+                UserDefaults.standard.set(selectedDecibelsIndex, forKey: "SelectedDecibelIndex")
+            }), in: 0...5, step: 1)
+                .padding(.horizontal, 20)
+
+            Text("\(decibelValues[selectedDecibelsIndex]) decibels")
+                .fontWeight(.semibold)
+                .padding(.top, 5)
+        }
+        .onAppear {
+            // Make sure the slider and text are in sync with the stored value
+            selectedDecibelsIndex = UserDefaults.standard.integer(forKey: "SelectedDecibelIndex")
+        }
+    }
+}
